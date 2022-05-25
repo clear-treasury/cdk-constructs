@@ -16,7 +16,8 @@ The interface contains following fields, which should be passed as parameters, w
     - repo:octo-org/octo-repo:ref:refs/tags/demo-tag - only allowed from `demo-tag`
     - repo:octo-org/octo-repo:pull_request - only allowed from the `pull_request` event
     - repo:octo-org/octo-repo:environment:Production - only allowd from `Production` environment name
-        @see https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#configuring-the-oidc-trust-with-the-cloud 
+
+    @see https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#configuring-the-oidc-trust-with-the-cloud 
 6. *rolePolicyDocumentJSON* (string): The JSON string repesentation of an inline IAM permissions policy to be attached to the role which will be created; this will define what actions on what AWS services the role will be authorised to do; if the value is 'none', then the managed AWS policy `AdministratorAcess` will be attached
 
 ## Useful commands
