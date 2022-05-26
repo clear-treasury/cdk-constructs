@@ -1,5 +1,6 @@
-import * as cdk from '@aws-cdk/core';
-import * as iam from '@aws-cdk/aws-iam';
+import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import { Construct } from 'constructs';
 
 export interface GithubActionsRoleProps {
   // Define construct properties here
@@ -24,9 +25,9 @@ export interface GithubActionsRoleProps {
   readonly rolePolicyDocumentJSON: string
 }
 
-export class GithubActionsRole extends cdk.Construct {
+export class GithubActionsRole extends Construct {
 
-  constructor(scope: cdk.Construct, id: string, props: GithubActionsRoleProps) {
+  constructor(scope: Construct, id: string, props: GithubActionsRoleProps) {
     super(scope, id);
 
     // Define construct contents here
