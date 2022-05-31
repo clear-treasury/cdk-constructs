@@ -61,7 +61,7 @@ export class GithubActionsRole extends Construct {
         gitHubOIDCRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
       }
       
-      if ( props.githubRepoName !== '' && props.githubRepoID !== '')
+      if ( ( props.githubRepoName ) && ( props.githubRepoID ) )
       {
         cdk.Tags.of(gitHubOIDCRole).add('GitHubRepositoryName', props.githubRepoName);
         cdk.Tags.of(gitHubOIDCRole).add('GitHubRepositoryID', props.githubRepoID);
