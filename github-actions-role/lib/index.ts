@@ -32,39 +32,90 @@ export class GithubActionsRole extends Construct {
 
     // Define construct contents here
     const githubDomain = 'token.actions.githubusercontent.com';
-      const cfnOIDCProviderArn = cdk.Fn.importValue(props.stackOutputGitHubOidcProvider);
-      const iamRepoDeployAccess = props.repositoryConfig.map(r => `repo:${r.owner}/${r.repo}:${r.filter ?? '*'}`);
+    const cfnOIDCProviderArn = cdk.Fn.importValue(props.stackOutputGitHubOidcProvider);
+    const iamRepoDeployAccess = props.repositoryConfig.map(r => `repo:${r.owner}/${r.repo}:${r.filter ?? '*'}`);
 
-      // grant only requests coming from a specific GitHub repository.
-      const conditions: iam.Conditions = {
-        StringLike: {
-        [`${githubDomain}:sub`]: iamRepoDeployAccess,
+    // grant only requests coming from a specific GitHub repository.
+    const conditions: iam.Conditions = {
+      StringLike: {
+      [`${githubDomain}:sub`]: iamRepoDeployAccess,
+      },
+    };
+    
+    const basicPolicyDocumentJSON = `
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Action": [
+            "cloudformation:DescribeStacks",
+            "cloudformation:GetTemplate"
+          ],
+        "Resource": "*",
+        "Effect": "Allow"
         },
-      };
+        {
+          "Action": [
+            "ssm:GetParameter"
+          ],
+        "Resource": "*",
+        "Effect": "Allow"
+        },
+        {
+          "Action": [
+              "secretsmanager:GetSecretValue"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+        },
+        {
+          "Action": [
+              "iam:CreatePolicy*",
+              "iam:AttachRolePolicy",
+              "iam:GetRole",
+              "iam:PassRole"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+        },
+        {
+          "Action": [
+              "sts:AssumeRole"
+          ],
+          "Resource": "arn:aws:iam::*:role/cdk-*",
+          "Effect": "Allow"
+        }
+      ]
+    }
+    `
+    const gitHubOIDCRole = new iam.Role(this, 'Role', {
+      assumedBy: new iam.WebIdentityPrincipal(cfnOIDCProviderArn, conditions),
+      roleName: props.deployRole,
+      description: 'This role is used by GitHub Actions to deploy with AWS CDK or Terraform on the target AWS account',
+      maxSessionDuration: cdk.Duration.hours(1),
+    });
+    
+    const basicPolicyJSONParsed = JSON.parse(basicPolicyDocumentJSON);
+    const oidcRoleBasicPolicyDocument = iam.PolicyDocument.fromJson(basicPolicyJSONParsed);
+    const oidcRoleBasicPolicy = new iam.Policy(this, 'RoleBasicPolicy', {document: oidcRoleBasicPolicyDocument, policyName: 'GitHubActionsRoleBasicPolicy'});
+    gitHubOIDCRole.attachInlinePolicy(oidcRoleBasicPolicy);
 
-      const gitHubOIDCRole = new iam.Role(this, 'Role', {
-        assumedBy: new iam.WebIdentityPrincipal(cfnOIDCProviderArn, conditions),
-        roleName: props.deployRole,
-        description: 'This role is used by GitHub Actions to deploy with AWS CDK or Terraform on the target AWS account',
-        maxSessionDuration: cdk.Duration.hours(1),
-      });
-      
-      if ( props.rolePolicyDocumentJSON !== 'none' )
-      {
-        const policyJSONParsed = JSON.parse(props.rolePolicyDocumentJSON);
-        const oidcRolePolicyDocument = iam.PolicyDocument.fromJson(policyJSONParsed);
-        const oidcRolePolicy = new iam.Policy(this, 'RolePolicy', {document: oidcRolePolicyDocument, policyName: 'GitHubDeployRolePolicy'});
-        gitHubOIDCRole.attachInlinePolicy(oidcRolePolicy);
-      }
-      else
-      {
-        gitHubOIDCRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
-      }
-      
-      if ( ( props.githubRepoName ) && ( props.githubRepoID ) )
-      {
-        cdk.Tags.of(gitHubOIDCRole).add('GitHubRepositoryName', props.githubRepoName);
-        cdk.Tags.of(gitHubOIDCRole).add('GitHubRepositoryID', props.githubRepoID);
-      }
+    if ( props.rolePolicyDocumentJSON !== 'none' )
+    {
+      const customPolicyJSONParsed = JSON.parse(props.rolePolicyDocumentJSON);
+      const oidcRoleCustomPolicyDocument = iam.PolicyDocument.fromJson(customPolicyJSONParsed);
+      const oidcRoleCustomPolicy = new iam.Policy(this, 'RoleCustomPolicy', {document: oidcRoleCustomPolicyDocument, policyName: 'GitHubActionsRoleCustomPolicy'});
+      gitHubOIDCRole.attachInlinePolicy(oidcRoleCustomPolicy);
+    }
+    else
+    {
+      gitHubOIDCRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
+    }
+    
+    if ( ( props.githubRepoName ) && ( props.githubRepoID ) )
+    {
+      cdk.Tags.of(gitHubOIDCRole).add('GitHubRepositoryName', props.githubRepoName);
+      cdk.Tags.of(gitHubOIDCRole).add('GitHubRepositoryID', props.githubRepoID);
+    }
   }
 }
