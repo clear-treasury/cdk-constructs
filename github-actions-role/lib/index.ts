@@ -46,7 +46,15 @@ export class GithubActionsRole extends Construct {
     {
       "Version": "2012-10-17",
       "Statement": [
-                {
+        {
+          "Action": [
+            "cloudformation:DescribeStacks",
+            "cloudformation:GetTemplate"
+          ],
+        "Resource": "*",
+        "Effect": "Allow"
+        },
+        {
           "Action": [
               "sts:AssumeRole"
           ],
