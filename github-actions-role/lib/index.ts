@@ -22,7 +22,7 @@ export interface GithubActionsRoleProps {
    * @see https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#configuring-the-oidc-trust-with-the-cloud
    */
   readonly repositoryConfig: { owner: string; repo: string; filter?: string }[];
-  readonly rolePolicyDocumentJSON: string
+  readonly rolePolicyDocumentJSON?: string
 }
 
 export class GithubActionsRole extends Construct {
@@ -46,37 +46,7 @@ export class GithubActionsRole extends Construct {
     {
       "Version": "2012-10-17",
       "Statement": [
-        {
-          "Action": [
-            "cloudformation:DescribeStacks",
-            "cloudformation:GetTemplate"
-          ],
-        "Resource": "*",
-        "Effect": "Allow"
-        },
-        {
-          "Action": [
-            "ssm:GetParameter"
-          ],
-        "Resource": "*",
-        "Effect": "Allow"
-        },
-        {
-          "Action": [
-              "secretsmanager:GetSecretValue"
-          ],
-          "Resource": "*",
-          "Effect": "Allow"
-        },
-        {
-          "Action": [
-              "iam:CreatePolicy*",
-              "iam:AttachRolePolicy"
-          ],
-          "Resource": "*",
-          "Effect": "Allow"
-        },
-        {
+                {
           "Action": [
               "sts:AssumeRole"
           ],
@@ -98,16 +68,12 @@ export class GithubActionsRole extends Construct {
     const oidcRoleBasicPolicy = new iam.Policy(this, 'RoleBasicPolicy', {document: oidcRoleBasicPolicyDocument, policyName: 'GitHubActionsRoleBasicPolicy'});
     gitHubOIDCRole.attachInlinePolicy(oidcRoleBasicPolicy);
 
-    if ( props.rolePolicyDocumentJSON !== 'none' )
+    if ( props.rolePolicyDocumentJSON )
     {
       const customPolicyJSONParsed = JSON.parse(props.rolePolicyDocumentJSON);
       const oidcRoleCustomPolicyDocument = iam.PolicyDocument.fromJson(customPolicyJSONParsed);
       const oidcRoleCustomPolicy = new iam.Policy(this, 'RoleCustomPolicy', {document: oidcRoleCustomPolicyDocument, policyName: 'GitHubActionsRoleCustomPolicy'});
       gitHubOIDCRole.attachInlinePolicy(oidcRoleCustomPolicy);
-    }
-    else
-    {
-      gitHubOIDCRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
     }
     
     if ( ( props.githubRepoName ) && ( props.githubRepoID ) )

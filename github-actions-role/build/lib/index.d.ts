@@ -22,7 +22,7 @@ export interface GithubActionsRoleProps {
         repo: string;
         filter?: string;
     }[];
-    readonly rolePolicyDocumentJSON: string;
+    readonly rolePolicyDocumentJSON?: string;
 }
 export declare class GithubActionsRole extends Construct {
     constructor(scope: Construct, id: string, props: GithubActionsRoleProps);
