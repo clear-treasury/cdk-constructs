@@ -71,9 +71,7 @@ export class GithubActionsRole extends Construct {
         {
           "Action": [
               "iam:CreatePolicy*",
-              "iam:AttachRolePolicy",
-              "iam:GetRole",
-              "iam:PassRole"
+              "iam:AttachRolePolicy"
           ],
           "Resource": "*",
           "Effect": "Allow"
