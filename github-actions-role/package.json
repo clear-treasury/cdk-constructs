@@ -20,7 +20,7 @@
   "author": "Clear Treasury (UK Trading) Ltd.",
   "devDependencies": {
     "aws-cdk-lib": "^2.0.0",
-    "constructs": "^10.0.0",
+    "constructs": "10.1.112",
     "@aws-cdk/assert": "2.10.0",
     "@types/jest": "26.0.24",
     "@types/node": "10.17.60",
